@@ -58,12 +58,15 @@ void boasVindas()
     decorador("Digite a sentinela -9999 para encerrar a entrada do seu programa.");
 }
 
-void verificarOperacao(int operationCode)
+int verificarOperacao(int operationCode)
 {
     switch(operationCode)
     {
         case READ:
+            printf("Digite um número: ");
+            fflush(stdin);
             scanf("%d", &memory[operand]);
+            return TRUE;
         break;
 
         case WRITE:
@@ -116,6 +119,12 @@ void verificarOperacao(int operationCode)
             {
                 instructionCounter = operand;
             }
+        break;
+
+        case HALT:
+            dump();
+            printf("\n");
+            decorador("Execução do Simpletron Encerrada");
         break;
     }
 }
@@ -179,7 +188,6 @@ void armazenarPrograma()
         {
             memory[instructionCounter++] = instructionRegister;
         }
-
     }
 
     instructionRegister = 0;
@@ -188,8 +196,8 @@ void armazenarPrograma()
 
 void executarPrograma()
 {
-    /*
-    while(instructionRegister != SENTINELA)
+
+    while(operationCode != HALT)
     {
         instructionRegister = memory[instructionCounter];
 
@@ -199,7 +207,7 @@ void executarPrograma()
         verificarOperacao(operationCode);
 
         if (operationCode < BRANCH) instructionCounter++;
-    }*/
+    }
 }
 
 
@@ -209,15 +217,9 @@ int main()
 
     boasVindas();
 
-
-    instructionRegister = memory[instructionCounter];
-
-
     armazenarPrograma();
+
     executarPrograma();
-    dump();
-    printf("\n");
-    decorador("Execução do Simpletron Encerrada");
 
     return 0;
 }
