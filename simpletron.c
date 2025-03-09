@@ -1,7 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <locale.h>
+#include <math.h>
 
+
+#define MEMORY_SIZE 100
+#define SENTINELA -9999
+#define MAX_NUMBER 9999
+
+#define TRUE 1
+#define FALSE 0
 
 /*Operações de Entrada/Saída*/
 #define READ 10
@@ -24,7 +33,7 @@
 #define HALT 43
 
 
-int memory[100]; // A memória do Simpletron.
+int memory[MEMORY_SIZE]; // A memória do Simpletron.
 int accumulator = 0; // O acumulador do Simpletron.
 int instructionCounter = 0; // Registra o local que estará na memória.
 
@@ -109,12 +118,88 @@ void verificarOperacao(int operationCode)
             }
         break;
     }
+}
 
-    // Se não for uma Operação de Controle
-    if (operationCode < BRANCH)
+void dump()
+{
+    printf("\nREGISTERS:\n");
+
+    printf("accumulator              %+05d\n", accumulator);
+    printf("instructionCounter          %02d\n", instructionCounter);
+    printf("instructionRegister      %+05d\n", instructionRegister);
+    printf("operationCode               %02d\n", operationCode);
+    printf("operand                     %02d\n", operand);
+
+    printf("\nMEMORY:\n\n");
+
+    int quantidade = (int) sqrt(MEMORY_SIZE);
+
+    /*Imprimir linha*/
+    printf("         ");
+    for (int i = 0; i < quantidade; i++)
     {
-        ++instructionCounter;
+        printf("%d      ", i);
     }
+    printf("\n");
+
+    /*Imprimir valores da memória*/
+    for (int i = 0; i < MEMORY_SIZE; i += quantidade)
+    {
+        printf("%02d  ", i);
+        for (int j = 0; j < quantidade; j++)
+        {
+            printf(" %+05d ", memory[i+j]);
+        }
+        printf("\n");
+    }
+}
+
+int handleInput(int instruction)
+{
+    if ((instruction < SENTINELA || instruction > MAX_NUMBER))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+void armazenarPrograma()
+{
+    while (instructionRegister != SENTINELA && instructionCounter < MEMORY_SIZE)
+    {
+        printf("%02d ? ", instructionCounter);
+
+        fflush(stdin); // Limpa o buffer.
+
+        if ((scanf("%d", &instructionRegister) == FALSE) ||
+            (handleInput(instructionRegister) == TRUE)) continue;
+
+        if (instructionRegister != SENTINELA)
+        {
+            memory[instructionCounter++] = instructionRegister;
+        }
+
+    }
+
+    instructionRegister = 0;
+    instructionCounter = 0;
+}
+
+void executarPrograma()
+{
+    /*
+    while(instructionRegister != SENTINELA)
+    {
+        instructionRegister = memory[instructionCounter];
+
+        operationCode = instructionRegister / 100;
+        operand = instructionRegister % 100;
+
+        verificarOperacao(operationCode);
+
+        if (operationCode < BRANCH) instructionCounter++;
+    }*/
 }
 
 
@@ -127,9 +212,11 @@ int main()
 
     instructionRegister = memory[instructionCounter];
 
-    operationCode = instructionRegister / 100;
-    operand = instructionRegister % 100;
 
+    armazenarPrograma();
+    executarPrograma();
+    dump();
+    printf("\n");
     decorador("Execução do Simpletron Encerrada");
 
     return 0;
