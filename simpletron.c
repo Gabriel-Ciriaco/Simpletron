@@ -12,21 +12,21 @@
 #define TRUE 1
 #define FALSE 0
 
-/*Operações de Entrada/Saída*/
+/*OperaÃ§Ãµes de Entrada/SaÃ­da*/
 #define READ 10
 #define WRITE 11
 
-/*Operações de Carregamento/Armazenamento*/
+/*OperaÃ§Ãµes de Carregamento/Armazenamento*/
 #define LOAD 20
 #define STORE 21
 
-/*Operações Aritméticas*/
+/*OperaÃ§Ãµes AritmÃ©ticas*/
 #define ADD 30
 #define SUBTRACT 31
 #define DIVIDE 32
 #define MULTIPLY 33
 
-/*Operações de Transferência de Controle*/
+/*OperaÃ§Ãµes de TransferÃªncia de Controle*/
 #define BRANCH 40
 #define BRANCHNEG 41
 #define BRANCHZERO 42
@@ -43,14 +43,14 @@ enum Errors {
     MULTIPLY_ERROR
 };
 
-int memory[MEMORY_SIZE]; // A memória do Simpletron.
+int memory[MEMORY_SIZE]; // A memÃ³ria do Simpletron.
 int accumulator = 0; // O acumulador do Simpletron.
-int instructionCounter = 0; // Registra o local que estará na memória.
+int instructionCounter = 0; // Registra o local que estarÃ¡ na memÃ³ria.
 
-int operationCode = 0; // Operação que está sendo executada.
-int operand = 0; // Local da memória da palavra de instrução.
+int operationCode = 0; // OperaÃ§Ã£o que estÃ¡ sendo executada.
+int operand = 0; // Local da memÃ³ria da palavra de instruÃ§Ã£o.
 
-int instructionRegister = 0; // Registrador da memória.
+int instructionRegister = 0; // Registrador da memÃ³ria.
 
 
 void decorador(char * mensagem)
@@ -61,10 +61,10 @@ void decorador(char * mensagem)
 void boasVindas()
 {
     decorador("Bem vindo ao Simpletron!");
-    decorador("Favor digitar seu programa, uma instrução");
+    decorador("Favor digitar seu programa, uma instruÃ§Ã£o");
     decorador("(ou palavra de dados) por vez.");
-    decorador("Mostrarei o número do local e uma interrogação (?).");
-    decorador("Você, então, deverá digitar a palavra para esse local.");
+    decorador("Mostrarei o nÃºmero do local e uma interrogaÃ§Ã£o (?).");
+    decorador("VocÃª, entÃ£o, deverÃ¡ digitar a palavra para esse local.");
     decorador("Digite a sentinela -9999 para encerrar a entrada do seu programa.");
 }
 
@@ -73,7 +73,7 @@ int instrucaoValida(int instrucao)
 {
     if (instrucao < SENTINELA || instrucao > MAX_NUMBER)
     {
-        printf("*** Instrução Inválida: %+04d***\n", instrucao);
+        printf("*** InstruÃ§Ã£o InvÃ¡lida: %+04d***\n", instrucao);
 
         return FALSE;
     }
@@ -84,16 +84,16 @@ int instrucaoValida(int instrucao)
 
 int errosFatais(int codigoErro)
 {
-    dump(); // Dump da memória.
+    dump(); // Dump da memÃ³ria.
 
     switch (codigoErro)
     {
         case OPERAND_CODE_ERROR:
-            decorador("Código de Operação inválido.");
+            decorador("CÃ³digo de OperaÃ§Ã£o invÃ¡lido.");
         break;
 
         case INTERVAL_ERROR:
-            decorador("Número fora do intervalo -9999 a +9999.");
+            decorador("NÃºmero fora do intervalo -9999 a +9999.");
         break;
 
         case ADD_ERROR:
@@ -101,19 +101,19 @@ int errosFatais(int codigoErro)
         break;
 
         case SUBTRACT_ERROR:
-            decorador("A subtração no acumulador ultrapassou os limites do registrador.");
+            decorador("A subtraÃ§Ã£o no acumulador ultrapassou os limites do registrador.");
         break;
 
         case DIVIDE_ERROR:
-            decorador("A divisão no acumulador ultrapassou os limites do registrador.");
+            decorador("A divisÃ£o no acumulador ultrapassou os limites do registrador.");
         break;
 
         case DIVIDE_ZERO:
-            decorador("Tentativa de divisão por zero.");
+            decorador("Tentativa de divisÃ£o por zero.");
         break;
 
         case MULTIPLY_ERROR:
-            decorador("A multiplicação no acumulador ultrapassou os limites do registrador.");
+            decorador("A multiplicaÃ§Ã£o no acumulador ultrapassou os limites do registrador.");
         break;
 
         default:
@@ -131,7 +131,7 @@ int verificarOperacao(int operationCode)
     switch(operationCode)
     {
         case READ:
-            decorador("Digite um número");
+            decorador("Digite um nÃºmero");
 
             fflush(stdin); // Limpa o buffer
 
@@ -225,7 +225,7 @@ int verificarOperacao(int operationCode)
         break;
 
         case HALT:
-            dump(); // Dump da memória.
+            dump(); // Dump da memÃ³ria.
             return FALSE;
         break;
 
@@ -259,7 +259,7 @@ void dump()
     }
     printf("\n");
 
-    /*Imprimir valores da memória*/
+    /*Imprimir valores da memÃ³ria*/
     for (int i = 0; i < MEMORY_SIZE; i += quantidade)
     {
         printf("%02d  ", i);
@@ -273,30 +273,20 @@ void dump()
     printf("\n");
 }
 
-int handleInput(int instruction)
-{
-    if ((instruction < SENTINELA || instruction > MAX_NUMBER))
-    {
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 void armazenarPrograma()
 {
     do
     {
-        // Pede uma instrução do usuário.
+        // Pede uma instruÃ§Ã£o do usuÃ¡rio.
         printf("%02d ? ", instructionCounter);
 
         fflush(stdin); // Limpa o buffer.
 
-        // Pede a instrução de novo em caso de erro.
+        // Pede a instruÃ§Ã£o de novo em caso de erro.
         if ((scanf("%d", &instructionRegister) == FALSE) ||
-            (handleInput(instructionRegister) == TRUE)) continue;
+            (instrucaoValida(instructionRegister) == FALSE)) continue;
 
-        // Armazena a instrução.
+        // Armazena a instruÃ§Ã£o.
         if (instructionRegister != SENTINELA)
         {
             memory[instructionCounter++] = instructionRegister;
@@ -321,11 +311,11 @@ void executarPrograma()
 
     if (operationCode == HALT)
     {
-        decorador("Execução do Simpletron Encerrada.");
+        decorador("ExecuÃ§Ã£o do Simpletron Encerrada.");
     }
     else
     {
-        decorador("Execução do Simpletron Encerrada de forma anormal.");
+        decorador("ExecuÃ§Ã£o do Simpletron Encerrada de forma anormal.");
     }
 
 }
