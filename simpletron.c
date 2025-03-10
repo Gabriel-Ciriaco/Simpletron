@@ -58,19 +58,25 @@ void boasVindas()
     decorador("Digite a sentinela -9999 para encerrar a entrada do seu programa.");
 }
 
-int verificarOperacao(int operationCode)
+void verificarOperacao(int operationCode)
 {
+    instructionCounter++;
     switch(operationCode)
     {
         case READ:
-            printf("Digite um número: ");
-            fflush(stdin);
+            decorador("Digite um número");
+
+            fflush(stdin); // Limpa o buffer
+
             scanf("%d", &memory[operand]);
-            return TRUE;
+
+            printf("\n");
         break;
 
         case WRITE:
+            decorador("Resultado");
             printf("%d", memory[operand]);
+            printf("\n");
         break;
 
 
@@ -175,20 +181,20 @@ int handleInput(int instruction)
 
 void armazenarPrograma()
 {
-    while (instructionRegister != SENTINELA && instructionCounter < MEMORY_SIZE)
+    do
     {
+        // Pede uma instrução do usuário.
         printf("%02d ? ", instructionCounter);
 
         fflush(stdin); // Limpa o buffer.
 
+        // Pede a instrução de novo em caso de erro.
         if ((scanf("%d", &instructionRegister) == FALSE) ||
             (handleInput(instructionRegister) == TRUE)) continue;
 
-        if (instructionRegister != SENTINELA)
-        {
-            memory[instructionCounter++] = instructionRegister;
-        }
-    }
+        // Armazena a instrução.
+        memory[instructionCounter++] = instructionRegister;
+    }while(instructionRegister != SENTINELA && instructionCounter < MEMORY_SIZE);
 
     instructionRegister = 0;
     instructionCounter = 0;
@@ -196,8 +202,7 @@ void armazenarPrograma()
 
 void executarPrograma()
 {
-
-    while(operationCode != HALT)
+    do
     {
         instructionRegister = memory[instructionCounter];
 
@@ -205,9 +210,7 @@ void executarPrograma()
         operand = instructionRegister % 100;
 
         verificarOperacao(operationCode);
-
-        if (operationCode < BRANCH) instructionCounter++;
-    }
+    }while(operationCode != HALT && instructionCounter < MEMORY_SIZE);
 }
 
 
