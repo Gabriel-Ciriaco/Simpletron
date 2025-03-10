@@ -32,6 +32,16 @@
 #define BRANCHZERO 42
 #define HALT 43
 
+/*Erros Fatais*/
+enum Errors {
+    OPERAND_CODE_ERROR = 1,
+    INTERVAL_ERROR,
+    ADD_ERROR,
+    SUBTRACT_ERROR,
+    DIVIDE_ERROR,
+    DIVIDE_ZERO,
+    MULTIPLY_ERROR
+};
 
 int memory[MEMORY_SIZE]; // A memória do Simpletron.
 int accumulator = 0; // O acumulador do Simpletron.
@@ -58,9 +68,66 @@ void boasVindas()
     decorador("Digite a sentinela -9999 para encerrar a entrada do seu programa.");
 }
 
-void verificarOperacao(int operationCode)
+
+int instrucaoValida(int instrucao)
+{
+    if (instrucao < SENTINELA || instrucao > MAX_NUMBER)
+    {
+        printf("*** Instrução Inválida: %+04d***\n", instrucao);
+
+        return FALSE;
+    }
+
+    return TRUE;
+
+}
+
+int errosFatais(int codigoErro)
+{
+    dump(); // Dump da memória.
+
+    switch (codigoErro)
+    {
+        case OPERAND_CODE_ERROR:
+            decorador("Código de Operação inválido.");
+        break;
+
+        case INTERVAL_ERROR:
+            decorador("Número fora do intervalo -9999 a +9999.");
+        break;
+
+        case ADD_ERROR:
+            decorador("A soma no acumulador ultrapassou os limites do registrador.");
+        break;
+
+        case SUBTRACT_ERROR:
+            decorador("A subtração no acumulador ultrapassou os limites do registrador.");
+        break;
+
+        case DIVIDE_ERROR:
+            decorador("A divisão no acumulador ultrapassou os limites do registrador.");
+        break;
+
+        case DIVIDE_ZERO:
+            decorador("Tentativa de divisão por zero.");
+        break;
+
+        case MULTIPLY_ERROR:
+            decorador("A multiplicação no acumulador ultrapassou os limites do registrador.");
+        break;
+
+        default:
+            return FALSE;
+        break;
+    }
+
+    return TRUE;
+}
+
+int verificarOperacao(int operationCode)
 {
     instructionCounter++;
+
     switch(operationCode)
     {
         case READ:
@@ -70,12 +137,19 @@ void verificarOperacao(int operationCode)
 
             scanf("%d", &memory[operand]);
 
+            if (!instrucaoValida(memory[operand]))
+            {
+                return !errosFatais(INTERVAL_ERROR);
+            }
+
             printf("\n");
         break;
 
         case WRITE:
             decorador("Resultado");
+
             printf("%d", memory[operand]);
+
             printf("\n");
         break;
 
@@ -91,21 +165,44 @@ void verificarOperacao(int operationCode)
 
         case ADD:
             accumulator += memory[operand];
+
+            if (!instrucaoValida(accumulator))
+            {
+                return !errosFatais(ADD_ERROR);
+            }
         break;
 
         case SUBTRACT:
             accumulator -= memory[operand];
+
+            if(!instrucaoValida(accumulator))
+            {
+                return !errosFatais(SUBTRACT_ERROR);
+            }
         break;
 
         case DIVIDE:
             if (memory[operand] != 0)
             {
                 accumulator /= memory[operand];
+                return TRUE;
+            }
+            else if (!instrucaoValida(memory[operand]))
+            {
+                return !errosFatais(DIVIDE_ERROR);
+            }
+            else{
+                return !errosFatais(DIVIDE_ZERO);
             }
         break;
 
         case MULTIPLY:
             accumulator *= memory[operand];
+
+            if(!instrucaoValida(accumulator))
+            {
+                return !errosFatais(MULTIPLY_ERROR);
+            }
         break;
 
 
@@ -128,11 +225,16 @@ void verificarOperacao(int operationCode)
         break;
 
         case HALT:
-            dump();
-            printf("\n");
-            decorador("Execução do Simpletron Encerrada");
+            dump(); // Dump da memória.
+            return FALSE;
+        break;
+
+        default:
+            return !errosFatais(OPERAND_CODE_ERROR);
         break;
     }
+
+    return TRUE;
 }
 
 void dump()
@@ -167,6 +269,8 @@ void dump()
         }
         printf("\n");
     }
+
+    printf("\n");
 }
 
 int handleInput(int instruction)
@@ -193,7 +297,10 @@ void armazenarPrograma()
             (handleInput(instructionRegister) == TRUE)) continue;
 
         // Armazena a instrução.
-        memory[instructionCounter++] = instructionRegister;
+        if (instructionRegister != SENTINELA)
+        {
+            memory[instructionCounter++] = instructionRegister;
+        }
     }while(instructionRegister != SENTINELA && instructionCounter < MEMORY_SIZE);
 
     instructionRegister = 0;
@@ -209,8 +316,18 @@ void executarPrograma()
         operationCode = instructionRegister / 100;
         operand = instructionRegister % 100;
 
-        verificarOperacao(operationCode);
-    }while(operationCode != HALT && instructionCounter < MEMORY_SIZE);
+    }while(verificarOperacao(operationCode) == TRUE && instructionCounter < MEMORY_SIZE);
+
+
+    if (operationCode == HALT)
+    {
+        decorador("Execução do Simpletron Encerrada.");
+    }
+    else
+    {
+        decorador("Execução do Simpletron Encerrada de forma anormal.");
+    }
+
 }
 
 
