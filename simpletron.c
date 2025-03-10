@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <stdbool.h>
 #include <locale.h>
 #include <math.h>
 
@@ -8,9 +8,6 @@
 #define MEMORY_SIZE 100
 #define SENTINELA -9999
 #define MAX_NUMBER 9999
-
-#define TRUE 1
-#define FALSE 0
 
 /*Operações de Entrada/Saída*/
 #define READ 10
@@ -69,20 +66,20 @@ void boasVindas()
 }
 
 
-int instrucaoValida(int instrucao)
+bool instrucaoValida(int instrucao)
 {
     if (instrucao < SENTINELA || instrucao > MAX_NUMBER)
     {
         printf("*** Instrução Inválida: %+04d***\n", instrucao);
 
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 
 }
 
-int errosFatais(int codigoErro)
+bool errosFatais(int codigoErro)
 {
     dump(); // Dump da memória.
 
@@ -117,14 +114,14 @@ int errosFatais(int codigoErro)
         break;
 
         default:
-            return FALSE;
+            return false;
         break;
     }
 
-    return TRUE;
+    return true;
 }
 
-int verificarOperacao(int operationCode)
+bool verificarOperacao(int operationCode)
 {
     instructionCounter++;
 
@@ -185,7 +182,7 @@ int verificarOperacao(int operationCode)
             if (memory[operand] != 0)
             {
                 accumulator /= memory[operand];
-                return TRUE;
+                return true;
             }
             else if (!instrucaoValida(memory[operand]))
             {
@@ -226,7 +223,7 @@ int verificarOperacao(int operationCode)
 
         case HALT:
             dump(); // Dump da memória.
-            return FALSE;
+            return false;
         break;
 
         default:
@@ -234,7 +231,7 @@ int verificarOperacao(int operationCode)
         break;
     }
 
-    return TRUE;
+    return true;
 }
 
 void dump()
@@ -283,8 +280,8 @@ void armazenarPrograma()
         fflush(stdin); // Limpa o buffer.
 
         // Pede a instrução de novo em caso de erro.
-        if ((scanf("%d", &instructionRegister) == FALSE) ||
-            (instrucaoValida(instructionRegister) == FALSE)) continue;
+        if ((scanf("%d", &instructionRegister) == false) ||
+            (instrucaoValida(instructionRegister) == false)) continue;
 
         // Armazena a instrução.
         if (instructionRegister != SENTINELA)
@@ -306,7 +303,7 @@ void executarPrograma()
         operationCode = instructionRegister / 100;
         operand = instructionRegister % 100;
 
-    }while(verificarOperacao(operationCode) == TRUE && instructionCounter < MEMORY_SIZE);
+    }while(verificarOperacao(operationCode) == true && instructionCounter < MEMORY_SIZE);
 
 
     if (operationCode == HALT)
