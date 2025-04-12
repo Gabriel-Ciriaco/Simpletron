@@ -65,18 +65,24 @@ void boasVindas()
     decorador("Digite a sentinela -9999 para encerrar a entrada do seu programa.");
 }
 
+bool estaNosLimites(int valor)
+{
+    return (valor > SENTINELA && valor < MAX_NUMBER);
+}
 
 bool instrucaoValida(int instrucao)
 {
-    if (instrucao < SENTINELA || instrucao > MAX_NUMBER)
+    if (!estaNosLimites(instrucao))
     {
-        printf("*** Instrução Inválida: %+04d***\n", instrucao);
+        if (instrucao != SENTINELA)
+        {
+            printf("*** Instrução Inválida: %+04d ***\n", instrucao);
+        }
 
         return false;
     }
 
     return true;
-
 }
 
 bool errosFatais(int codigoErro)
@@ -114,11 +120,11 @@ bool errosFatais(int codigoErro)
         break;
 
         default:
-            return false;
+            return false; // Não ocorreu um erro fatal.
         break;
     }
 
-    return true;
+    return true; // Ocorreu um erro fatal.
 }
 
 bool verificarOperacao(int operationCode)
@@ -134,7 +140,7 @@ bool verificarOperacao(int operationCode)
 
             scanf("%d", &memory[operand]);
 
-            if (!instrucaoValida(memory[operand]))
+            if (!estaNosLimites(memory[operand]))
             {
                 return !errosFatais(INTERVAL_ERROR);
             }
@@ -163,7 +169,7 @@ bool verificarOperacao(int operationCode)
         case ADD:
             accumulator += memory[operand];
 
-            if (!instrucaoValida(accumulator))
+            if (!estaNosLimites(accumulator))
             {
                 return !errosFatais(ADD_ERROR);
             }
@@ -172,7 +178,7 @@ bool verificarOperacao(int operationCode)
         case SUBTRACT:
             accumulator -= memory[operand];
 
-            if(!instrucaoValida(accumulator))
+            if(!estaNosLimites(accumulator))
             {
                 return !errosFatais(SUBTRACT_ERROR);
             }
@@ -182,21 +188,22 @@ bool verificarOperacao(int operationCode)
             if (memory[operand] != 0)
             {
                 accumulator /= memory[operand];
+
+                if (!estaNosLimites(memory[operand]))
+                {
+                    return !errosFatais(DIVIDE_ERROR);
+                }
+
                 return true;
             }
-            else if (!instrucaoValida(memory[operand]))
-            {
-                return !errosFatais(DIVIDE_ERROR);
-            }
-            else{
-                return !errosFatais(DIVIDE_ZERO);
-            }
+
+            return !errosFatais(DIVIDE_ZERO);
         break;
 
         case MULTIPLY:
             accumulator *= memory[operand];
 
-            if(!instrucaoValida(accumulator))
+            if(!estaNosLimites(accumulator))
             {
                 return !errosFatais(MULTIPLY_ERROR);
             }
