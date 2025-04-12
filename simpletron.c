@@ -22,6 +22,8 @@
 #define SUBTRACT 31
 #define DIVIDE 32
 #define MULTIPLY 33
+#define EXPONENTIATION 34
+#define MODULO 35
 
 /*Operações de Transferência de Controle*/
 #define BRANCH 40
@@ -37,7 +39,9 @@ enum Errors {
     SUBTRACT_ERROR,
     DIVIDE_ERROR,
     DIVIDE_ZERO,
-    MULTIPLY_ERROR
+    MULTIPLY_ERROR,
+    EXPONENTIATION_ERROR,
+    MODULO_ERROR
 };
 
 int memory[MEMORY_SIZE]; // A memória do Simpletron.
@@ -67,17 +71,14 @@ void boasVindas()
 
 bool estaNosLimites(int valor)
 {
-    return (valor > SENTINELA && valor < MAX_NUMBER);
+    return (valor >= SENTINELA && valor <= MAX_NUMBER);
 }
 
 bool instrucaoValida(int instrucao)
 {
     if (!estaNosLimites(instrucao))
     {
-        if (instrucao != SENTINELA)
-        {
-            printf("*** Instrução Inválida: %+04d ***\n", instrucao);
-        }
+        printf("*** Instrução Inválida: %+04d ***\n", instrucao);
 
         return false;
     }
@@ -117,6 +118,14 @@ bool errosFatais(int codigoErro)
 
         case MULTIPLY_ERROR:
             decorador("A multiplicação no acumulador ultrapassou os limites do registrador.");
+        break;
+
+        case EXPONENTIATION_ERROR:
+            decorador("A exponenciação no acumulador ultrapassou os limites do registrador.");
+        break;
+
+        case MODULO_ERROR:
+            decorador("A divisão para o cálculo do modulo ultrapassou os limites do registrador.");
         break;
 
         default:
@@ -207,6 +216,29 @@ bool verificarOperacao(int operationCode)
             {
                 return !errosFatais(MULTIPLY_ERROR);
             }
+        break;
+
+        case EXPONENTIATION:
+            accumulator = pow(accumulator, memory[operand]);
+
+            if (!estaNosLimites(accumulator))
+            {
+                return !errosFatais(EXPONENTIATION_ERROR);
+            }
+        break;
+
+        case MODULO:
+            if (memory[operand] != 0)
+            {
+                accumulator = accumulator % memory[operand];
+
+                if (!estaNosLimites(memory[operand]))
+                {
+                    return !errosFatais(MODULO_ERROR);
+                }
+            }
+
+            return !errosFatais(DIVIDE_ZERO);
         break;
 
 
