@@ -46,12 +46,12 @@ enum Errors {
 
 int memory[MEMORY_SIZE]; // A memória do Simpletron.
 int accumulator = 0; // O acumulador do Simpletron.
+
 int instructionCounter = 0; // Registra o local que estará na memória.
+int instructionRegister = 0; // Registrador da memória.
 
 int operationCode = 0; // Operação que está sendo executada.
 int operand = 0; // Local da memória da palavra de instrução.
-
-int instructionRegister = 0; // Registrador da memória.
 
 
 void decorador(char * mensagem)
