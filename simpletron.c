@@ -136,7 +136,7 @@ bool errosFatais(int codigoErro)
     return true; // Ocorreu um erro fatal.
 }
 
-bool verificarOperacao(int operationCode)
+bool operacaoInvalida(int operationCode)
 {
     instructionCounter++;
 
@@ -151,7 +151,7 @@ bool verificarOperacao(int operationCode)
 
             if (!estaNosLimites(memory[operand]))
             {
-                return !errosFatais(INTERVAL_ERROR);
+                return errosFatais(INTERVAL_ERROR);
             }
 
             printf("\n");
@@ -180,7 +180,7 @@ bool verificarOperacao(int operationCode)
 
             if (!estaNosLimites(accumulator))
             {
-                return !errosFatais(ADD_ERROR);
+                return errosFatais(ADD_ERROR);
             }
         break;
 
@@ -189,7 +189,7 @@ bool verificarOperacao(int operationCode)
 
             if(!estaNosLimites(accumulator))
             {
-                return !errosFatais(SUBTRACT_ERROR);
+                return errosFatais(SUBTRACT_ERROR);
             }
         break;
 
@@ -200,13 +200,13 @@ bool verificarOperacao(int operationCode)
 
                 if (!estaNosLimites(memory[operand]))
                 {
-                    return !errosFatais(DIVIDE_ERROR);
+                    return errosFatais(DIVIDE_ERROR);
                 }
 
-                return true;
+                return false;
             }
 
-            return !errosFatais(DIVIDE_ZERO);
+            return errosFatais(DIVIDE_ZERO);
         break;
 
         case MULTIPLY:
@@ -214,7 +214,7 @@ bool verificarOperacao(int operationCode)
 
             if(!estaNosLimites(accumulator))
             {
-                return !errosFatais(MULTIPLY_ERROR);
+                return errosFatais(MULTIPLY_ERROR);
             }
         break;
 
@@ -223,7 +223,7 @@ bool verificarOperacao(int operationCode)
 
             if (!estaNosLimites(accumulator))
             {
-                return !errosFatais(EXPONENTIATION_ERROR);
+                return errosFatais(EXPONENTIATION_ERROR);
             }
         break;
 
@@ -234,11 +234,11 @@ bool verificarOperacao(int operationCode)
 
                 if (!estaNosLimites(memory[operand]))
                 {
-                    return !errosFatais(MODULO_ERROR);
+                    return errosFatais(MODULO_ERROR);
                 }
             }
 
-            return !errosFatais(DIVIDE_ZERO);
+            return errosFatais(DIVIDE_ZERO);
         break;
 
 
@@ -262,15 +262,20 @@ bool verificarOperacao(int operationCode)
 
         case HALT:
             dump(); // Dump da memória.
-            return false;
+            /*
+                Apesar desta operação ser válida,
+                retornaremos como se fosse inválida
+                para sairmos do loop de execução.
+            */
+            return true;
         break;
 
         default:
-            return !errosFatais(OPERAND_CODE_ERROR);
+            return errosFatais(OPERAND_CODE_ERROR);
         break;
     }
 
-    return true;
+    return false; // A operação é válida.
 }
 
 void dump()
@@ -344,7 +349,7 @@ void executarPrograma()
         operationCode = instructionRegister / 100;
         operand = instructionRegister % 100;
 
-    }while(verificarOperacao(operationCode) == true && instructionCounter < MEMORY_SIZE);
+    }while(operacaoInvalida(operationCode) == false && instructionCounter < MEMORY_SIZE);
 
 
     if (operationCode == HALT)
