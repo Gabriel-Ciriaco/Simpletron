@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <locale.h>
 #include <math.h>
 
@@ -62,6 +63,14 @@ void decorador(char * mensagem)
 void boasVindas()
 {
     decorador("Bem vindo ao Simpletron!");
+
+    decorador("Caso deseje utilizar um programa .simpletron,");
+    decorador("digite o caminho dele a seguir.");
+    decorador("Caso contrário, digite \"nao\" e pressione ENTER.");
+}
+
+void instrucoesManuais()
+{
     decorador("Favor digitar seu programa, uma instrução");
     decorador("(ou palavra de dados) por vez.");
     decorador("Mostrarei o número do local e uma interrogação (?).");
@@ -316,28 +325,88 @@ void dump()
     printf("\n");
 }
 
-void armazenarPrograma()
+bool lerPrograma(const char * PROGRAMA_PATH)
 {
-    do
+    FILE * programa;
+
+    programa = fopen(PROGRAMA_PATH, "r");
+
+    if (!programa)
     {
-        // Pede uma instrução do usuário.
-        printf("%02d ? ", instructionCounter);
+        printf("\nNão existe tal arquivo ou diretório: %s\n",
+               PROGRAMA_PATH);
+    }
 
-        fflush(stdin); // Limpa o buffer.
+    const int INSTRUCTION_LEN = 7;
 
-        // Pede a instrução de novo em caso de erro.
-        if ((scanf("%d", &instructionRegister) == false) ||
-            (instrucaoValida(instructionRegister) == false)) continue;
+    char linha[INSTRUCTION_LEN];
 
-        // Armazena a instrução.
+    while(fgets(linha, sizeof(linha), programa)
+          && instructionCounter < MEMORY_SIZE)
+    {
+        // Procura e remove a quebra de linha.
+        linha[strcspn(linha, "\r\n")] = '\0';
+
+        int instrucao = atoi(linha);
+
+        if (!instrucaoValida(instrucao))
+        {
+            break;
+        }
+
+        instructionRegister = instrucao;
+
         if (instructionRegister != SENTINELA)
         {
             memory[instructionCounter++] = instructionRegister;
         }
-    }while(instructionRegister != SENTINELA && instructionCounter < MEMORY_SIZE);
+        else
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool armazenarPrograma(const char * PROGRAMA_PATH)
+{
+    if (PROGRAMA_PATH)
+    {
+        bool leituraPrograma = lerPrograma(PROGRAMA_PATH);
+
+        if (!leituraPrograma)
+        {
+            decorador("Ocorreu um erro ao armazenar o programa.");
+
+            return false;
+        }
+    }
+    else
+    {
+        do
+        {
+            // Pede uma instrução do usuário.
+            printf("%02d ? ", instructionCounter);
+
+            fflush(stdin); // Limpa o buffer.
+
+            // Pede a instrução de novo em caso de erro.
+            if ((scanf("%d", &instructionRegister) == false) ||
+                (instrucaoValida(instructionRegister) == false)) continue;
+
+            // Armazena a instrução.
+            if (instructionRegister != SENTINELA)
+            {
+                memory[instructionCounter++] = instructionRegister;
+            }
+        }while(instructionRegister != SENTINELA && instructionCounter < MEMORY_SIZE);
+    }
 
     instructionRegister = 0;
     instructionCounter = 0;
+
+    return true;
 }
 
 void executarPrograma()
@@ -363,6 +432,13 @@ void executarPrograma()
 
 }
 
+void rodarPrograma(const char * PROGRAMA_PATH)
+{
+    if (armazenarPrograma(PROGRAMA_PATH))
+    {
+        executarPrograma();
+    }
+}
 
 int main()
 {
@@ -370,9 +446,23 @@ int main()
 
     boasVindas();
 
-    armazenarPrograma();
+    char arquivoSimpletron[100];
 
-    executarPrograma();
+    printf("\nArquivo .simpletron: ");
+
+    scanf("%s", arquivoSimpletron);
+
+    if (strcasecmp(arquivoSimpletron, "nao") == 0)
+    {
+        instrucoesManuais();
+
+        rodarPrograma(NULL);
+    }
+    else
+    {
+        rodarPrograma(arquivoSimpletron);
+    }
+
 
     return 0;
 }
