@@ -7,7 +7,8 @@
 
 
 #define MEMORY_SIZE 100
-#define SENTINELA -9999
+#define SENTINELA -99999
+#define MIN_NUMBER -9999
 #define MAX_NUMBER 9999
 
 /*Operações de Entrada/Saída*/
@@ -45,15 +46,38 @@ enum Errors {
     MODULO_ERROR
 };
 
-int memory[MEMORY_SIZE]; // A memória do Simpletron.
-int accumulator = 0; // O acumulador do Simpletron.
+typedef struct simpletron
+{
+    int memory[MEMORY_SIZE]; // A memória do Simpletron.
+    int accumulator; // O acumulador do Simpletron.
 
-int instructionCounter = 0; // Registra o local que estará na memória.
-int instructionRegister = 0; // Registrador da memória.
+    int instructionCounter; // Registra o local que estará na memória.
+    int instructionRegister; // Registrador da memória.
 
-int operationCode = 0; // Operação que está sendo executada.
-int operand = 0; // Local da memória da palavra de instrução.
+    int operationCode; // Operação que está sendo executada.
+    int operand; // Local da memória da palavra de instrução.
 
+} Simpletron;
+
+Simpletron criarSimpletron()
+{
+    Simpletron novoSimpletron;
+
+    for (int i = 0; i < MEMORY_SIZE; i++)
+    {
+        novoSimpletron.memory[i] = 0;
+    }
+
+    novoSimpletron.accumulator = 0;
+
+    novoSimpletron.instructionCounter = 0;
+    novoSimpletron.instructionRegister = 0;
+
+    novoSimpletron.operationCode = 0;
+    novoSimpletron.operand = 0;
+
+    return novoSimpletron;
+}
 
 void decorador(char * mensagem)
 {
@@ -75,17 +99,17 @@ void instrucoesManuais()
     decorador("(ou palavra de dados) por vez.");
     decorador("Mostrarei o número do local e uma interrogação (?).");
     decorador("Você, então, deverá digitar a palavra para esse local.");
-    decorador("Digite a sentinela -9999 para encerrar a entrada do seu programa.");
+    decorador("Digite a sentinela -99999 para encerrar a entrada do seu programa.");
 }
 
 bool estaNosLimites(int valor)
 {
-    return (valor >= SENTINELA && valor <= MAX_NUMBER);
+    return (valor >= MIN_NUMBER && valor <= MAX_NUMBER);
 }
 
 bool instrucaoValida(int instrucao)
 {
-    if (!estaNosLimites(instrucao))
+    if (!estaNosLimites(instrucao) && instrucao != SENTINELA)
     {
         printf("*** Instrução Inválida: %+04d ***\n", instrucao);
 
@@ -95,9 +119,47 @@ bool instrucaoValida(int instrucao)
     return true;
 }
 
-bool errosFatais(int codigoErro)
+void dump(Simpletron * simpletron)
 {
-    dump(); // Dump da memória.
+    printf("\nREGISTERS:\n");
+
+    printf("accumulator              %+05d\n", simpletron->accumulator);
+    printf("instructionCounter          %02d\n", simpletron->instructionCounter);
+    printf("instructionRegister      %+05d\n", simpletron->instructionRegister);
+    printf("operationCode               %02d\n", simpletron->operationCode);
+    printf("operand                     %02d\n", simpletron->operand);
+
+    printf("\nMEMORY:\n\n");
+
+    int quantidade = (int) sqrt(MEMORY_SIZE);
+
+    /*Imprimir linha*/
+    printf("         ");
+    for (int i = 0; i < quantidade; i++)
+    {
+        printf("%d      ", i);
+    }
+    printf("\n");
+
+    /*Imprimir valores da memória*/
+    for (int i = 0; i < MEMORY_SIZE; i += quantidade)
+    {
+        printf("%02d  ", i);
+        for (int j = 0; j < quantidade; j++)
+        {
+            if (i + j >= MEMORY_SIZE) break;
+
+            printf(" %+05d ", simpletron->memory[i+j]);
+        }
+        printf("\n");
+    }
+
+    printf("\n");
+}
+
+bool errosFatais(int codigoErro, Simpletron * simpletron)
+{
+    dump(simpletron); // Dump da memória.
 
     switch (codigoErro)
     {
@@ -145,10 +207,8 @@ bool errosFatais(int codigoErro)
     return true; // Ocorreu um erro fatal.
 }
 
-bool operacaoInvalida(int operationCode)
+bool operacaoInvalida(Simpletron * simpletron, int operationCode, int operand)
 {
-    instructionCounter++;
-
     switch(operationCode)
     {
         case READ:
@@ -156,11 +216,11 @@ bool operacaoInvalida(int operationCode)
 
             fflush(stdin); // Limpa o buffer
 
-            scanf("%d", &memory[operand]);
+            scanf("%d", &simpletron->memory[operand]);
 
-            if (!estaNosLimites(memory[operand]))
+            if (!estaNosLimites(simpletron->memory[operand]))
             {
-                return errosFatais(INTERVAL_ERROR);
+                return errosFatais(INTERVAL_ERROR, simpletron);
             }
 
             printf("\n");
@@ -169,108 +229,115 @@ bool operacaoInvalida(int operationCode)
         case WRITE:
             decorador("Resultado");
 
-            printf("%d", memory[operand]);
+            printf("%d", simpletron->memory[operand]);
 
             printf("\n");
         break;
 
 
         case LOAD:
-            accumulator = memory[operand];
+            simpletron->accumulator = simpletron->memory[operand];
         break;
 
         case STORE:
-            memory[operand] = accumulator;
+            simpletron->memory[operand] = simpletron->accumulator;
         break;
 
 
         case ADD:
-            accumulator += memory[operand];
+            simpletron->accumulator += simpletron->memory[operand];
 
-            if (!estaNosLimites(accumulator))
+            if (!estaNosLimites(simpletron->accumulator))
             {
-                return errosFatais(ADD_ERROR);
+                return errosFatais(ADD_ERROR, simpletron);
             }
         break;
 
         case SUBTRACT:
-            accumulator -= memory[operand];
+            simpletron->accumulator -= simpletron->memory[operand];
 
-            if(!estaNosLimites(accumulator))
+            if(!estaNosLimites(simpletron->accumulator))
             {
-                return errosFatais(SUBTRACT_ERROR);
+                return errosFatais(SUBTRACT_ERROR, simpletron);
             }
         break;
 
         case DIVIDE:
-            if (memory[operand] != 0)
+            if (simpletron->memory[operand] != 0)
             {
-                accumulator /= memory[operand];
+                simpletron->accumulator /= simpletron->memory[operand];
 
-                if (!estaNosLimites(memory[operand]))
+                if (!estaNosLimites(simpletron->memory[operand]))
                 {
-                    return errosFatais(DIVIDE_ERROR);
+                    return errosFatais(DIVIDE_ERROR, simpletron);
                 }
 
                 return false;
             }
 
-            return errosFatais(DIVIDE_ZERO);
+            return errosFatais(DIVIDE_ZERO, simpletron);
         break;
 
         case MULTIPLY:
-            accumulator *= memory[operand];
+            simpletron->accumulator *= simpletron->memory[operand];
 
-            if(!estaNosLimites(accumulator))
+            if(!estaNosLimites(simpletron->accumulator))
             {
-                return errosFatais(MULTIPLY_ERROR);
+                return errosFatais(MULTIPLY_ERROR, simpletron);
             }
         break;
 
         case EXPONENTIATION:
-            accumulator = pow(accumulator, memory[operand]);
+            simpletron->accumulator = pow(simpletron->accumulator, simpletron->memory[operand]);
 
-            if (!estaNosLimites(accumulator))
+            if (!estaNosLimites(simpletron->accumulator))
             {
-                return errosFatais(EXPONENTIATION_ERROR);
+                return errosFatais(EXPONENTIATION_ERROR, simpletron);
             }
         break;
 
         case MODULO:
-            if (memory[operand] != 0)
+            if (simpletron->memory[operand] != 0)
             {
-                accumulator = accumulator % memory[operand];
+                simpletron->accumulator = simpletron->accumulator % simpletron->memory[operand];
 
-                if (!estaNosLimites(memory[operand]))
+                if (!estaNosLimites(simpletron->memory[operand]))
                 {
-                    return errosFatais(MODULO_ERROR);
+                    return errosFatais(MODULO_ERROR, simpletron);
                 }
             }
 
-            return errosFatais(DIVIDE_ZERO);
+            return errosFatais(DIVIDE_ZERO, simpletron);
         break;
 
 
         case BRANCH:
-            instructionCounter = operand;
+            simpletron->instructionCounter = operand;
+
+            return false;
         break;
 
         case BRANCHNEG:
-            if (accumulator < 0)
+            if (simpletron->accumulator < 0)
             {
-                instructionCounter = operand;
+                simpletron->instructionCounter = operand;
+
+                return false;
             }
+
         break;
 
         case BRANCHZERO:
-            if (accumulator == 0)
+            if (simpletron->accumulator == 0)
             {
-                instructionCounter = operand;
+                simpletron->instructionCounter = operand;
+
+                return false;
             }
         break;
 
         case HALT:
-            dump(); // Dump da memória.
+            dump(simpletron); // Dump da memória.
             /*
                 Apesar desta operação ser válida,
                 retornaremos como se fosse inválida
@@ -280,52 +347,16 @@ bool operacaoInvalida(int operationCode)
         break;
 
         default:
-            return errosFatais(OPERAND_CODE_ERROR);
+            return errosFatais(OPERAND_CODE_ERROR, simpletron);
         break;
     }
+
+    simpletron->instructionCounter++; // Próxima instrução.
 
     return false; // A operação é válida.
 }
 
-void dump()
-{
-    printf("\nREGISTERS:\n");
-
-    printf("accumulator              %+05d\n", accumulator);
-    printf("instructionCounter          %02d\n", instructionCounter);
-    printf("instructionRegister      %+05d\n", instructionRegister);
-    printf("operationCode               %02d\n", operationCode);
-    printf("operand                     %02d\n", operand);
-
-    printf("\nMEMORY:\n\n");
-
-    int quantidade = (int) sqrt(MEMORY_SIZE);
-
-    /*Imprimir linha*/
-    printf("         ");
-    for (int i = 0; i < quantidade; i++)
-    {
-        printf("%d      ", i);
-    }
-    printf("\n");
-
-    /*Imprimir valores da memória*/
-    for (int i = 0; i < MEMORY_SIZE; i += quantidade)
-    {
-        printf("%02d  ", i);
-        for (int j = 0; j < quantidade; j++)
-        {
-            if (i + j >= MEMORY_SIZE) break;
-
-            printf(" %+05d ", memory[i+j]);
-        }
-        printf("\n");
-    }
-
-    printf("\n");
-}
-
-bool lerPrograma(const char * PROGRAMA_PATH)
+bool lerPrograma(const char * PROGRAMA_PATH, Simpletron * simpletron)
 {
     FILE * programa;
 
@@ -342,23 +373,24 @@ bool lerPrograma(const char * PROGRAMA_PATH)
     char linha[INSTRUCTION_LEN];
 
     while(fgets(linha, sizeof(linha), programa)
-          && instructionCounter < MEMORY_SIZE)
+          && simpletron->instructionCounter < MEMORY_SIZE)
     {
         // Procura e remove a quebra de linha.
         linha[strcspn(linha, "\r\n")] = '\0';
 
         int instrucao = atoi(linha);
 
-        if (!instrucaoValida(instrucao))
-        {
-            break;
-        }
+        simpletron->instructionRegister = instrucao;
 
-        instructionRegister = instrucao;
-
-        if (instructionRegister != SENTINELA)
+        if (simpletron->instructionRegister != SENTINELA)
         {
-            memory[instructionCounter++] = instructionRegister;
+            if (!instrucaoValida(instrucao))
+            {
+                break;
+            }
+
+
+            simpletron->memory[simpletron->instructionCounter++] = simpletron->instructionRegister;
         }
         else
         {
@@ -369,11 +401,11 @@ bool lerPrograma(const char * PROGRAMA_PATH)
     return false;
 }
 
-bool armazenarPrograma(const char * PROGRAMA_PATH)
+bool armazenarPrograma(const char * PROGRAMA_PATH, Simpletron * simpletron)
 {
     if (PROGRAMA_PATH)
     {
-        bool leituraPrograma = lerPrograma(PROGRAMA_PATH);
+        bool leituraPrograma = lerPrograma(PROGRAMA_PATH, simpletron);
 
         if (!leituraPrograma)
         {
@@ -387,41 +419,42 @@ bool armazenarPrograma(const char * PROGRAMA_PATH)
         do
         {
             // Pede uma instrução do usuário.
-            printf("%02d ? ", instructionCounter);
+            printf("%02d ? ", simpletron->instructionCounter);
 
             fflush(stdin); // Limpa o buffer.
 
             // Pede a instrução de novo em caso de erro.
-            if ((scanf("%d", &instructionRegister) == false) ||
-                (instrucaoValida(instructionRegister) == false)) continue;
+            if ((scanf("%d", &simpletron->instructionRegister) == false) ||
+                (instrucaoValida(simpletron->instructionRegister) == false)) continue;
 
             // Armazena a instrução.
-            if (instructionRegister != SENTINELA)
+            if (simpletron->instructionRegister != SENTINELA)
             {
-                memory[instructionCounter++] = instructionRegister;
+                simpletron->memory[simpletron->instructionCounter++] = simpletron->instructionRegister;
             }
-        }while(instructionRegister != SENTINELA && instructionCounter < MEMORY_SIZE);
+        }while(simpletron->instructionRegister != SENTINELA && simpletron->instructionCounter < MEMORY_SIZE);
     }
 
-    instructionRegister = 0;
-    instructionCounter = 0;
+    simpletron->instructionRegister = 0;
+    simpletron->instructionCounter = 0;
 
     return true;
 }
 
-void executarPrograma()
+void executarPrograma(Simpletron * simpletron)
 {
     do
     {
-        instructionRegister = memory[instructionCounter];
+        simpletron->instructionRegister = simpletron->memory[simpletron->instructionCounter];
 
-        operationCode = instructionRegister / 100;
-        operand = instructionRegister % 100;
+        simpletron->operationCode = simpletron->instructionRegister / 100;
+        simpletron->operand = simpletron->instructionRegister % 100;
 
-    }while(operacaoInvalida(operationCode) == false && instructionCounter < MEMORY_SIZE);
+    }while(operacaoInvalida(simpletron, simpletron->operationCode, simpletron->operand) == false
+           && simpletron->instructionCounter < MEMORY_SIZE);
 
 
-    if (operationCode == HALT)
+    if (simpletron->operationCode == HALT)
     {
         decorador("Execução do Simpletron Encerrada.");
     }
@@ -432,11 +465,11 @@ void executarPrograma()
 
 }
 
-void rodarPrograma(const char * PROGRAMA_PATH)
+void rodarPrograma(const char * PROGRAMA_PATH, Simpletron * simpletron)
 {
-    if (armazenarPrograma(PROGRAMA_PATH))
+    if (armazenarPrograma(PROGRAMA_PATH, simpletron))
     {
-        executarPrograma();
+        executarPrograma(simpletron);
     }
 }
 
@@ -452,15 +485,17 @@ int main()
 
     scanf("%s", arquivoSimpletron);
 
+    Simpletron simpletron = criarSimpletron();
+
     if (strcasecmp(arquivoSimpletron, "nao") == 0)
     {
         instrucoesManuais();
 
-        rodarPrograma(NULL);
+        rodarPrograma(NULL, &simpletron);
     }
     else
     {
-        rodarPrograma(arquivoSimpletron);
+        rodarPrograma(arquivoSimpletron, &simpletron);
     }
 
 
