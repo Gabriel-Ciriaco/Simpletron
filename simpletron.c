@@ -399,6 +399,8 @@ bool lerPrograma(const char * PROGRAMA_PATH, Simpletron * simpletron)
             return true;
         }
     }
+
+    return false; // Caso o programa não possua SENTINELA.
 }
 
 bool armazenarPrograma(const char * PROGRAMA_PATH, Simpletron * simpletron)
