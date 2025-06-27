@@ -366,6 +366,8 @@ bool lerPrograma(const char * PROGRAMA_PATH, Simpletron * simpletron)
     {
         printf("\nNão existe tal arquivo ou diretório: %s\n",
                PROGRAMA_PATH);
+
+        return false;
     }
 
     const int INSTRUCTION_LEN = 7;
@@ -397,8 +399,6 @@ bool lerPrograma(const char * PROGRAMA_PATH, Simpletron * simpletron)
             return true;
         }
     }
-
-    return false;
 }
 
 bool armazenarPrograma(const char * PROGRAMA_PATH, Simpletron * simpletron)
